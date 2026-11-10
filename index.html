@@ -72,10 +72,10 @@ img {
     50% { transform: translate(-50%, -15px); }
 }
 
-/* ===== VIDEO + FLECHA BAJAR (VIDEO MÁS GRANDE) ===== */
-.video-inicio { width: 100%; }
+/* ===== VIDEO DE INICIO (aparece al abrir la invitación) ===== */
+.video-inicio { width: 100%; background: #000; }
 
-.video-wrap { position: relative; width: 100%; max-width: 100%; margin: 0 auto; }
+.video-wrap { position: relative; width: 100%; max-width: 100%; margin: 0 auto; background: #000; }
 .foto-inicio .video-wrap video.foto-entrada-celular {
     width: 100% !important;
     max-width: 100% !important;
@@ -85,7 +85,32 @@ img {
     min-height: 85svh;
     display: block;
     object-fit: cover;
+    opacity: 0;
+    transition: opacity 1s ease;
 }
+.foto-inicio .video-wrap video.foto-entrada-celular.visible { opacity: 1; }
+
+/* Botón de respaldo: solo aparece si el navegador bloquea el video */
+.video-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 76px;
+    height: 76px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .85);
+    cursor: pointer;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .35);
+    -webkit-tap-highlight-color: transparent;
+}
+.video-play span { width: 0; height: 0; border-top: 14px solid transparent; border-bottom: 14px solid transparent; border-left: 22px solid #5B463B; margin-left: 6px; }
+.video-play.oculta { display: none; }
 
 .flecha-bajar {
     position: absolute;
@@ -424,10 +449,15 @@ img {
     <div class="texto-tocar">Abrir Invitación</div>
 </div>
 
-<!-- VIDEO CON FLECHA BAJAR (sin autoplay: arranca al abrir la invitación) -->
+<!-- VIDEO DE INICIO: aparece y se reproduce apenas se abre la invitación -->
 <section class="foto-inicio video-inicio">
     <div class="video-wrap">
-        <video id="videoInicio" src="video.mp4" poster="4.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture preload="auto" class="foto-entrada-celular"></video>
+        <video id="videoInicio" poster="4.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture preload="auto" class="foto-entrada-celular">
+            <source src="video.mp4" type="video/mp4">
+        </video>
+
+        <!-- Solo se muestra si el navegador bloquea la reproducción automática -->
+        <button class="video-play oculta" id="videoPlay" aria-label="Reproducir video"><span></span></button>
 
         <a href="#musica" class="flecha-bajar" id="flechaBajar" aria-label="Bajar">
             <i></i>
@@ -485,7 +515,7 @@ img {
         <p>Lima - Perú</p>
     </div>
     <br>
-    <a href="https://maps.app.goo.gl/M3AwhzXP1nx1fDD1A" target="_blank" class="btn-ubicacion">VER UBICACIÓN</a>
+    <a href="https://maps.app.goo.gl/UYWZdYGX9FiAtS1HA" target="_blank" class="btn-ubicacion">VER UBICACIÓN</a>
 </div>
 <section class="foto-inicio"><img src="Captura de pantalla 2026-11-10 130242.jpg" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
 
@@ -625,19 +655,41 @@ const preloader = document.getElementById("preloader");
 const audio = document.getElementById("musicaBoda");
 const playIcon = document.querySelector("#playMusic .play-icon");
 const videoInicio = document.getElementById("videoInicio");
+const videoPlay = document.getElementById("videoPlay");
 
 let invitacionAbierta = false;
 
-/* ===== VIDEO: se reproduce solo después de abrir la invitación ===== */
+/* ===== VIDEO: aparece y se reproduce al abrir la invitación ===== */
 function iniciarVideo() {
     if (!videoInicio) return;
     videoInicio.muted = true;
     videoInicio.defaultMuted = true;
+    videoInicio.classList.add("visible");
+
     var p = videoInicio.play();
-    if (p && typeof p.catch === "function") {
-        p.catch(function () {});
+    if (p && typeof p.then === "function") {
+        p.then(function () {
+            videoPlay.classList.add("oculta");
+        }).catch(function () {
+            /* El navegador lo bloqueó: mostramos el botón para reproducirlo con un toque */
+            videoPlay.classList.remove("oculta");
+        });
     }
 }
+
+/* Botón de respaldo */
+videoPlay.addEventListener("click", function () {
+    iniciarVideo();
+});
+
+/* Si el video termina de cargar después de abrir, arranca igual */
+videoInicio.addEventListener("canplay", function () {
+    if (invitacionAbierta && videoInicio.paused) iniciarVideo();
+});
+videoInicio.addEventListener("playing", function () {
+    videoInicio.classList.add("visible");
+    videoPlay.classList.add("oculta");
+});
 
 /* ===== PORTADA / ABRIR INVITACIÓN ===== */
 preloader.addEventListener("click", function () {
@@ -645,11 +697,14 @@ preloader.addEventListener("click", function () {
     preloader.classList.add("hide");
     window.scrollTo({ top: 0, behavior: "instant" });
 
+    /* El toque cuenta como interacción: aquí arranca el video (celular y laptop) */
     if (videoInicio) {
+        if (videoInicio.readyState === 0) videoInicio.load();
         videoInicio.currentTime = 0;
         iniciarVideo();
     }
 
+    /* Reintento por si el navegador lo dejó en pausa durante la transición */
     setTimeout(function () {
         if (videoInicio && videoInicio.paused) iniciarVideo();
     }, 900);
@@ -828,7 +883,7 @@ window.addEventListener("load", function () {
 })();
 
 /* ===== CONTADOR ===== */
-const weddingDate = new Date("December 05, 2026 17:30:00").getTime();
+const weddingDate = new Date("February 20, 2027 11:30:00").getTime();
 
 function dos(n) { return n < 10 ? "0" + n : n; }
 
