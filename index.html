@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boda Julieta & Edson</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:wght@400;500;600&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+/* ===== BASE ===== */
+html { scroll-behavior: smooth; }
+html, body { overflow-x: hidden; }
+
+body {
+    margin: 0;
+    background-image: url("fondo6.png");
+    font-family: 'Montserrat', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #5d4936;
+    padding-bottom: 20px;
+    width: 100%;
+    -webkit-font-smoothing: antialiased;
+}
+
+img {
+    display: block;
+    height: auto;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+.reveal { opacity: 0; transform: translateY(30px); transition: all .8s ease-out; }
+.reveal.active { opacity: 1; transform: translateY(0); }
+
+/* ===== PORTADA ===== */
+#preloader {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    z-index: 999999;
+    cursor: pointer;
+    transition: .8s;
+}
+#preloader.hide { opacity: 0; visibility: hidden; }
+
+.preloader-full { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.texto-tocar {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    width: 100%;
+    animation: flotar 3s ease-in-out infinite;
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 1.1rem;
+    text-align: center;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+    pointer-events: none;
+    z-index: 10;
+}
+@keyframes flotar {
+    0%, 100% { transform: translate(-50%, 0); }
+    50% { transform: translate(-50%, -15px); }
+}
+
+/* ===== VIDEO + FLECHA BAJAR ===== */
+.video-inicio { width: 100%; }
+
+.video-wrap { position: relative; width: 100%; max-width: 650px; margin: 0 auto; }
+.video-wrap video { width: 100%; display: block; object-fit: cover; }
+
+.flecha-bajar {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, .6);
+    transition: opacity .4s;
+    z-index: 5;
+}
+.flecha-bajar i {
+    width: 14px;
+    height: 14px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(45deg);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .6));
+    animation: rebote 1.6s ease-in-out infinite;
+}
+.flecha-bajar.oculta { opacity: 0; pointer-events: none; }
+
+@keyframes rebote {
+    0%, 100% { transform: translateY(0) rotate(45deg); }
+    50% { transform: translateY(8px) rotate(45deg); }
+}
+
+/* ===== REPRODUCTOR ===== */
+.music-section { width: 100%; max-width: 430px; margin: 0 auto; padding: 25px 25px 20px; text-align: center; box-sizing: border-box; }
+.music-text { margin: 0 0 10px; font-family: Arial, sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2px; color: #777; text-transform: uppercase; }
+.music-progress-container { width: 100%; height: 20px; position: relative; cursor: pointer; margin: 0 auto 8px; }
+.music-progress-container::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; height: 3px; background: #777; border-radius: 10px; }
+.music-progress { position: absolute; left: 0; top: 8px; width: 0%; height: 3px; background: #333; border-radius: 10px; z-index: 2; }
+.music-progress-dot { position: absolute; width: 9px; height: 9px; background: #444; border-radius: 50%; top: 5px; left: 0%; transform: translateX(-50%); z-index: 3; }
+.music-controls { display: flex; justify-content: center; align-items: center; gap: 30px; margin-top: 5px; }
+.music-btn { width: 25px; height: 30px; border: none; background: transparent; padding: 0; margin: 0; cursor: pointer; display: flex; justify-content: center; align-items: center; -webkit-tap-highlight-color: transparent; }
+.music-btn:focus { outline: none; }
+.play-btn { width: 30px; height: 30px; }
+.play-icon { width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 11px solid #444; margin-left: 3px; }
+.play-icon.pause { width: 10px; height: 14px; border: none; border-left: 4px solid #444; border-right: 4px solid #444; margin-left: 0; }
+.prev-icon, .next-icon { position: relative; width: 15px; height: 14px; }
+.prev-icon::before { content: ""; position: absolute; left: 3px; top: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-right: 9px solid #555; }
+.prev-icon::after { content: ""; position: absolute; left: 0; top: 2px; width: 2px; height: 11px; background: #555; }
+.next-icon::before { content: ""; position: absolute; right: 3px; top: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 9px solid #555; }
+.next-icon::after { content: ""; position: absolute; right: 0; top: 2px; width: 2px; height: 11px; background: #555; }
+
+/* ===== TARJETA UBICACIÓN ===== */
+.tarjeta-ubicacion {
+    width: 90%;
+    max-width: 430px;
+    min-height: 420px;
+    margin: 35px auto;
+    padding: 40px 30px;
+    box-sizing: border-box;
+    background-image: url("fondo5.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 35px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+}
+.icono-ubicacion { width: 120px; height: 120px; object-fit: contain; margin-bottom: 15px; }
+.titulo-ubicacion { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 500; letter-spacing: 5px; margin: 5px 0 10px; }
+.titulo-ubicacion::after { content: ""; display: block; width: 250px; height: 1px; background: rgba(255, 255, 255, .7); margin: 12px auto 18px; }
+.info-ubicacion { font-family: 'Cormorant Garamond', serif; }
+.info-ubicacion p { margin: 6px 0; font-size: 1.05rem; }
+.info-ubicacion .hora-ubicacion { font-size: 1.4rem; font-weight: bold; }
+
+.btn-ubicacion {
+    margin-top: 25px; padding: 13px 30px; background: #fff; border-radius: 30px;
+    text-decoration: none; font-family: Arial, sans-serif; font-size: .85rem; font-weight: bold; letter-spacing: 1px;
+}
+
+.tarjeta-ubicacion, .tarjeta-ubicacion h3, .tarjeta-ubicacion p, .tarjeta-ubicacion a,
+.btn-ubicacion, .btn-confirmar { color: #614e1a !important; }
+.btn-ubicacion, .btn-confirmar { border-color: #614e1a; }
+
+.capsula-tiempo h3, .capsula-tiempo p, .preparate, .nos-vemos, .timer-grid, .timer-item,
+.timer-item span, .timer-label, .colon { color: #4e3b09 !important; }
+
+/* ===== TARJETA INVITADO (misma letra que CEREMONIA) ===== */
+.tarjeta-invitado {
+    width: 90%;
+    max-width: 380px;
+    margin: 30px auto;
+    padding: 12px;
+    box-sizing: border-box;
+    background-image: url("fondo100.png");
+    background-size: cover;
+    background-position: center;
+    border-radius: 30px;
+    box-shadow: 0 12px 35px rgba(91, 70, 59, .18);
+    border: 1px solid rgba(141, 122, 100, .5);
+}
+.invitado-marco {
+    border: 1px solid #b29d84;
+    border-radius: 22px;
+    padding: 35px 22px 30px;
+    text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    color: #614e1a;
+    background: rgba(255, 255, 255, .35);
+}
+.invitado-pretitulo { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; margin: 0 0 14px; opacity: .8; }
+.invitado-nombre {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    line-height: 1.3;
+    margin: 0;
+    color: #614e1a;
+    word-break: break-word;
+}
+.invitado-divisor { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px auto; width: 80%; }
+.invitado-divisor span { flex: 1; height: 1px; background: linear-gradient(to right, transparent, #8d7a64, transparent); }
+.invitado-divisor i { font-style: normal; font-size: 14px; color: #8d7a64; }
+.invitado-reservado { font-size: 15px; font-style: italic; margin: 0 0 14px; opacity: .9; }
+.invitado-circulo {
+    width: 84px; height: 84px; margin: 0 auto 14px; border-radius: 50%;
+    border: 1.5px solid #8d7a64; outline: 1px solid rgba(141, 122, 100, .4); outline-offset: 5px;
+    display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .55);
+}
+.invitado-circulo span { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; line-height: 1; color: #614e1a; }
+.invitado-texto { font-size: 15px; letter-spacing: 1.5px; margin: 18px 0 0; }
+
+/* ===== CONTADOR ===== */
+.capsula-tiempo {
+    background-color: #8fa1c0;
+    background-size: cover;
+    background-position: center;
+    width: 100%;
+    max-width: 500px;
+    padding: 50px 30px 30px;
+    border-radius: 180px 180px 0 0;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .1);
+    margin: 0 auto;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+}
+.preparate { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 300; letter-spacing: 6px; margin: 0 0 8px; text-transform: uppercase; }
+.nos-vemos { font-size: .85rem; font-weight: 400; letter-spacing: 3px; margin: 0 0 35px; opacity: .9; }
+.timer-grid { display: flex; justify-content: center; align-items: flex-start; gap: 12px; }
+.timer-item { display: flex; flex-direction: column; align-items: center; min-width: 60px; }
+.timer-item span, .colon { font-family: 'Courier New', Courier, monospace; font-size: 2rem; font-weight: 400; line-height: 1; }
+.colon { margin-top: 2px; }
+.timer-label { font-family: 'Courier New', Courier, monospace; font-size: .65rem; letter-spacing: 1px; margin-top: 15px; text-transform: uppercase; opacity: .85; }
+.btn-confirmar {
+    display: inline-block; background-color: #fff; text-decoration: none; padding: 12px 25px;
+    border-radius: 25px; font-family: 'Montserrat', sans-serif; font-size: .8rem; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; box-shadow: 0 4px 12px rgba(0, 0, 0, .15); transition: all .3s ease;
+}
+.btn-confirmar:hover { background-color: rgb(220, 216, 203); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 0, 0, .2); }
+
+/* ===== DRESS CODE ===== */
+.tarjeta-dress-blanca {
+    width: 90%;
+    max-width: 300px;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .1);
+    margin: -40px auto 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-image: url("fondo100.png");
+    background-size: cover;
+    background-position: center;
+    font-family: 'Cormorant Garamond', 'Cinzel', Georgia, serif;
+    color: rgb(109, 88, 31);
+}
+.tarjeta-dress-blanca h3 { font-family: 'Cinzel', serif; color: rgb(109, 88, 31); letter-spacing: 3px; text-transform: uppercase; margin: 0 0 10px; font-weight: normal; }
+.tipo-vestimenta { font-family: 'Cinzel', serif; font-size: .75rem; letter-spacing: 2px; font-weight: 600; text-transform: uppercase; }
+.color-swatch { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; color: rgb(109, 88, 31); font-family: 'Cormorant Garamond', serif; }
+.color-circle { width: 28px; height: 28px; border-radius: 50%; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .2s ease; }
+.color-circle:hover { transform: scale(1.1); }
+
+/* ===== CARRUSEL ===== */
+.carrusel-boda { width: 100%; margin: 0; padding: 0; overflow: hidden; position: relative; }
+.carrusel-track { display: flex; width: 100%; animation: moverCarrusel 20s infinite; }
+.carrusel-slide { min-width: 100%; width: 100%; flex-shrink: 0; position: relative; }
+.carrusel-slide img { width: 100%; height: 600px; display: block; object-fit: cover; object-position: center; }
+
+@keyframes moverCarrusel {
+    0%, 28% {
+        transform: translateX(0);
+    }
+
+    33%, 61% {
+        transform: translateX(-100%);
+    }
+
+    66%, 94% {
+        transform: translateX(-200%);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+/* ===== CRÉDITOS ===== */
+.creditos { width: 100%; text-align: center; padding: 20px 10px; font-size: .5rem; letter-spacing: 1px; color: #1c1006; opacity: .4; text-transform: uppercase; box-sizing: border-box; }
+
+/* ===== PC ===== */
+@media (min-width: 769px) {
+    .foto-inicio { width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; box-sizing: border-box; margin: 0 auto; }
+    section.foto-inicio { padding: 15px 20px; }
+    .foto-inicio .foto-entrada-celular { width: auto; max-width: 650px; max-height: 650px; height: auto; object-fit: contain; display: block; margin: 0 auto; }
+    .foto-inicio img[src="reg.jpg"] { width: 100%; max-width: 900px; max-height: 700px; }
+    .video-wrap video { max-height: 650px; }
+    .carrusel-boda { max-width: 1000px; margin: 30px auto; }
+    .carrusel-slide img { height: 550px; }
+}
+@media (min-width: 1600px) {
+    .foto-inicio .foto-entrada-celular { max-width: 550px; max-height: 600px; }
+}
+
+/* ===== CELULAR ===== */
+@media (max-width: 768px) {
+    .carrusel-slide img { height: 480px; }
+}
+
+@media (max-width: 480px) {
+    .music-section { max-width: 100%; padding: 25px 35px 20px; }
+    .music-text { font-size: 9px; letter-spacing: 1.8px; }
+    .carrusel-slide img { height: 430px; }
+
+    .capsula-tiempo { width: 90% !important; max-width: 350px !important; padding: 35px 15px 25px !important; border-radius: 120px 120px 0 0 !important; }
+    .preparate { font-size: 25px !important; letter-spacing: 3px !important; margin-bottom: 5px !important; }
+    .nos-vemos { font-size: .65rem !important; letter-spacing: 1.5px !important; margin-bottom: 25px !important; }
+    .timer-grid { gap: 3px !important; width: 100% !important; justify-content: center !important; }
+    .timer-item { min-width: 45px !important; }
+    .timer-item span { font-size: 24px !important; }
+    .colon { font-size: 21px !important; margin-top: 1px !important; }
+    .timer-label { font-size: 11px !important; letter-spacing: .5px !important; margin-top: 10px !important; }
+
+    .tarjeta-ubicacion { width: 88% !important; max-width: 350px !important; min-height: 350px !important; padding: 30px 20px !important; margin: 25px auto !important; border-radius: 30px !important; }
+    .icono-ubicacion { width: 80px !important; height: 80px !important; margin-bottom: 10px !important; }
+    .titulo-ubicacion { font-size: 25px !important; letter-spacing: 3px !important; margin: 5px 0 !important; }
+    .titulo-ubicacion::after { width: 150px !important; margin: 8px auto 12px !important; }
+    .info-ubicacion p { font-size: 15px !important; line-height: 1.5; margin: 4px 0 !important; }
+    .info-ubicacion .hora-ubicacion { font-size: 1rem !important; }
+    .btn-ubicacion { margin-top: 18px !important; padding: 9px 20px !important; font-size: 12px !important; letter-spacing: 1px !important; }
+    .btn-confirmar { font-size: 12px !important; padding: 10px 18px !important; letter-spacing: 1px !important; }
+
+    .tarjeta-ubicacion, .tarjeta-ubicacion *, .capsula-tiempo, .capsula-tiempo * {
+        font-family: Georgia, 'Times New Roman', serif !important;
+        color: #5B463B !important;
+        font-weight: 400 !important;
+        text-transform: none;
+    }
+
+    .tarjeta-dress-blanca, .tarjeta-dress-blanca * {
+        font-family: Georgia, 'Times New Roman', serif !important;
+        color: #5B463B !important;
+        font-weight: 400;
+    }
+    .tarjeta-dress-blanca h3 { font-size: 25px !important; font-weight: 400 !important; }
+    .tarjeta-dress-blanca .tipo-vestimenta { font-size: 15px !important; letter-spacing: 2px; }
+    .tarjeta-dress-blanca p { font-size: 15px !important; }
+    .tarjeta-dress-blanca .color-swatch span { font-size: 13px !important; }
+
+    /* TARJETA DE INVITADO: Georgia, igual que las demás secciones */
+    .tarjeta-invitado, .tarjeta-invitado * {
+        font-family: Georgia, 'Times New Roman', serif !important;
+        color: #5B463B !important;
+    }
+    .invitado-nombre { font-size: 22px; font-weight: 400; letter-spacing: 2px; }
+}/* ===== NOTA SIN NIÑOS ===== */
+.invitado-nota {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-style: italic;
+    letter-spacing: 1.5px;
+    line-height: 1.5;
+    margin: 22px auto 0;
+    padding-top: 16px;
+    max-width: 240px;
+    border-top: 1px solid rgba(141, 122, 100, .35);
+    color: #614e1a;
+    opacity: .85;
+}
+</style>
+</head>
+
+<body>
+
+<!-- PORTADA -->
+<div id="preloader">
+    <img src="2.jpeg" alt="Portada" class="preloader-full">
+    <div class="texto-tocar">Abrir Invitación</div>
+</div>
+
+<!-- VIDEO CON FLECHA BAJAR (sin autoplay: arranca al abrir la invitación) -->
+<section class="foto-inicio video-inicio">
+    <div class="video-wrap">
+        <video id="videoInicio" src="video.mp4" poster="4.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture preload="auto" class="foto-entrada-celular"></video>
+
+        <a href="#musica" class="flecha-bajar" id="flechaBajar" aria-label="Bajar">
+            
+            
+        </a>
+    </div>
+</section>
+
+<!-- MÚSICA -->
+<div class="music-section" id="musica">
+    <p class="music-text">DALE UN CLIC Y ESCUCHA NUESTRA CANCIÓN</p>
+
+    <div class="music-progress-container" id="progressContainer">
+        <div class="music-progress" id="musicProgress"></div>
+        <div class="music-progress-dot" id="musicDot"></div>
+    </div>
+
+    <div class="music-controls">
+        <button class="music-btn" id="prevMusic" aria-label="Canción anterior"><span class="prev-icon"></span></button>
+        <button class="music-btn play-btn" id="playMusic" aria-label="Reproducir música"><span class="play-icon"></span></button>
+        <button class="music-btn" id="nextMusic" aria-label="Siguiente canción"><span class="next-icon"></span></button>
+    </div>
+
+    <audio id="musicaBoda" preload="auto">
+        <source src="musica.mp3" type="audio/mpeg">
+    </audio>
+</div>
+
+<!-- FOTOS -->
+<section class="foto-inicio"><img src="fod.png" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
+<section class="foto-inicio"><img src="5.png" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
+<section class="foto-inicio" style="width:100%; display:flex; justify-content:center; overflow:hidden;">
+    <img src="padres.jpg" alt="Padres" class="foto-entrada-celular">
+</section>
+<section class="foto-inicio"><img src="Captura de pantalla 2026-11-10 125844.png" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
+
+<!-- CEREMONIA Y RECEPCIÓN -->
+<div class="tarjeta-ubicacion">
+    <img src="ceremonia.png" alt="Ceremonia" class="icono-ubicacion">
+    <h3 class="titulo-ubicacion">CEREMONIA</h3>
+    <div class="info-ubicacion">
+        <p class="hora-ubicacion">11:30 AM</p>
+        <p>Santuario Nuestra Señora de Guadalupe</p>
+        <p>Parque Unión Panamericana, La Victoria</p>
+        <p>Lima - Perú</p>
+    </div>
+    <a href="https://maps.app.goo.gl/iZrFNR4upheq81Su6" target="_blank" class="btn-ubicacion">VER UBICACIÓN</a>
+    <br><br>
+
+    <img src="fiesta.png" alt="Recepción" class="icono-ubicacion">
+    <h3 class="titulo-ubicacion">RECEPCIÓN</h3>
+    <div class="info-ubicacion">
+        <p class="hora-ubicacion">14:00 PM</p>
+        <p>Piedra Blanca - Casa para eventos</p>
+        <p>C. los Condores, Lurigancho-Chosica</p>
+        <p>Lima - Perú</p>
+    </div>
+    <br>
+    <a href="https://maps.app.goo.gl/M3AwhzXP1nx1fDD1A" target="_blank" class="btn-ubicacion">VER UBICACIÓN</a>
+</div>
+<section class="foto-inicio"><img src="Captura de pantalla 2026-11-10 130242.png" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
+
+<section class="foto-inicio"><img src="itinerario.png" alt="Itinerario" class="foto-entrada-celular"></section>
+
+<section class="foto-inicio" style="width:100%; display:flex; justify-content:center; overflow:hidden;">
+    <img src="4.png" alt="Efrain y Mishel" class="foto-entrada-celular">
+</section>
+<section class="foto-inicio" style="width:100%; display:flex; justify-content:center; overflow:hidden;">
+    <img src="reg.jpg" alt="Regalos" class="foto-entrada-celular">
+</section>
+
+<br><br><br><br>
+
+<!-- DRESS CODE -->
+<div class="tarjeta-dress-blanca reveal">
+    <h3>Dress code</h3>
+    <img src="dress.png" alt="Dress Code" style="width:90px; margin-bottom:10px;">
+    <p class="tipo-vestimenta">FORMAL</p>
+
+    <div style="width:60px; height:1px; background:rgb(109,88,31); margin:15px auto; opacity:.5;"></div>
+
+   <div style="margin-bottom:20px; color:rgb(109,88,31); font-size:.9rem; text-align:center;">
+    <p style="letter-spacing:2px; text-transform:uppercase; font-family:'Cinzel',serif; font-weight:bold; margin-bottom:15px;">
+        Color a Evitar
+    </p>
+
+    <div style="display:flex; justify-content:center; align-items:center; gap:16px; flex-wrap:wrap; padding:12px;">
+        <div class="color-swatch"><div class="color-circle" style="background-color:#C8A2C8;"></div><span>Lila</span></div>
+    </div>
+
+    <p style="margin-top:10px; font-family:'Cinzel',serif; font-size:0.65rem !important; letter-spacing:1px">
+        Todos los colores están permitidos menos lila
+    </p>
+</div>
+</div>
+
+<br><br>
+
+<!-- CARRUSEL -->
+<section class="carrusel-boda">
+    <div class="carrusel-track">
+                <div class="carrusel-slide"><img src="Captura de pantalla 2026-11-10 130148.png" alt="Efrain y Mishel"></div>
+        <div class="carrusel-slide"><img src="Captura de pantalla 2026-11-10 130604.png" alt="Efrain y Mishel"></div>
+
+        <div class="carrusel-slide"><img src="Captura de pantalla 2026-11-10 130109.png" alt="Efrain y Mishel"></div>
+    </div>
+     <div style="display:flex; flex-direction:column; gap:12px; align-items:center; margin-top:25px;">
+        <a href="https://limashow.pixieset.com/edsonandjulieta/"
+           class="btn-ubicacion" target="_blank" style="width:80%; text-align:center;">📸 VER GALERÍA</a>
+
+    </div>
+</section>
+
+<!-- COMPARTE CON NOSOTROS -->
+<div class="tarjeta-ubicacion">
+    <img src="ceremonia.png" alt="Participa" class="icono-ubicacion">
+    <h3 class="titulo-ubicacion">COMPARTE CON NOSOTROS</h3>
+    <div class="info-ubicacion">
+        <p>Ayúdanos a guardar los mejores momentos de este día.</p>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:12px; align-items:center; margin-top:25px;">
+        <a href="https://drive.google.com/drive/folders/1FJImRjpeVsTj9XqxXz5x6J2A4hqtxHMR?usp=sharing"
+           class="btn-ubicacion" target="_blank" style="width:80%; text-align:center;">📸 SUBIR FOTOS</a>
+        <a href="https://www.youtube.com/playlist?list=PLTayYYVOFpPI&jct=b55vmwQa-zFsBqaU73KPzA"
+           class="btn-ubicacion" target="_blank" style="width:80%; text-align:center;">🎵 SUGERIR MÚSICA</a>
+    </div>
+</div>
+<section class="foto-inicio"><img src="Captura de pantalla 2026-11-10 130424.png" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
+
+<!-- INVITADO Y PASES -->
+<div class="tarjeta-invitado reveal">
+    <div class="invitado-marco">
+        <p class="invitado-pretitulo">Invitación especial para</p>
+        <h3 class="invitado-nombre" id="nombre-invitado">Querido Invitado</h3>
+
+        <div class="invitado-divisor"><span></span><i>❖</i><span></span></div>
+
+        <p class="invitado-reservado">Hemos reservado</p>
+        <div class="invitado-circulo"><span id="num-pases">1</span></div>
+        <p class="invitado-texto" id="texto-pases">pase para ti</p>
+       <!-- <p class="invitado-nota">Por ser una celebración para adultos,<br>agradecemos su comprensión al no asistir con niños.</p>-->
+    </div>
+</div>
+
+<!-- CONTADOR -->
+<div class="capsula-tiempo" style="background-image: url('Captura\ de\ pantalla\ 2026-09-22\ 160719.png');">
+    <h3 class="preparate">¡PRONTO!</h3>
+    <p class="nos-vemos">NOS VEMOS DENTRO DE</p>
+
+    <div class="timer-container">
+        <div class="timer-grid">
+            <div class="timer-item"><span id="days">00</span><div class="timer-label">DÍAS</div></div>
+            <span class="colon">:</span>
+            <div class="timer-item"><span id="hours">00</span><div class="timer-label">HORAS</div></div>
+            <span class="colon">:</span>
+            <div class="timer-item"><span id="minutes">00</span><div class="timer-label">MINUTOS</div></div>
+            <span class="colon">:</span>
+            <div class="timer-item"><span id="seconds">00</span><div class="timer-label">SEGUNDOS</div></div>
+        </div>
+    </div>
+
+    <div style="margin-top:35px;">
+        <a href="https://wa.me/51964216600?text=¡Hola!%20Quiero%20confirmar%20mi%20asistencia%20a%20la%20boda.%20Nombres:"
+           target="_blank" class="btn-confirmar">CONFIRMAR ASISTENCIA</a>
+    </div>
+</div>
+
+<br>
+<img src="2.jpeg" alt="Portada" class="preloader-full" style="height:auto;">
+
+<div class="creditos">
+    <a href="https://wa.me/593960934663" target="_blank" style="color:#000; text-decoration:none; font-weight:bold;">
+        Realizado por Invitaciones Digitales Loja / 0960934663
+    </a>
+</div>
+
+<script>
+/* ===== ELEMENTOS PRINCIPALES ===== */
+const preloader = document.getElementById("preloader");
+const audio = document.getElementById("musicaBoda");
+const playIcon = document.querySelector("#playMusic .play-icon");
+const videoInicio = document.getElementById("videoInicio");
+
+let invitacionAbierta = false;
+
+/* ===== VIDEO: se reproduce solo después de abrir la invitación ===== */
+function iniciarVideo() {
+    if (!videoInicio) return;
+    videoInicio.muted = true;
+    videoInicio.defaultMuted = true;
+    var p = videoInicio.play();
+    if (p && typeof p.catch === "function") {
+        p.catch(function () {});
+    }
+}
+
+/* ===== PORTADA / ABRIR INVITACIÓN ===== */
+preloader.addEventListener("click", function () {
+    invitacionAbierta = true;
+    preloader.classList.add("hide");
+    window.scrollTo({ top: 0, behavior: "instant" });
+
+    /* El toque cuenta como interacción: aquí arranca el video (celular y laptop) */
+    if (videoInicio) {
+        videoInicio.currentTime = 0;
+        iniciarVideo();
+    }
+
+    /* Reintento por si el navegador lo dejó en pausa durante la transición */
+    setTimeout(function () {
+        if (videoInicio && videoInicio.paused) iniciarVideo();
+    }, 900);
+
+    audio.play()
+        .then(function () { playIcon.classList.add("pause"); })
+        .catch(function () {});
+}, { once: true });
+
+/* Reanudar el video si el navegador lo pausa al volver a la pestaña */
+document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && invitacionAbierta) iniciarVideo();
+});
+
+/* ===== REPRODUCTOR ===== */
+const progressContainer = document.getElementById("progressContainer");
+const progress = document.getElementById("musicProgress");
+const dot = document.getElementById("musicDot");
+
+function reproducir() {
+    audio.play()
+        .then(function () { playIcon.classList.add("pause"); })
+        .catch(function () {});
+}
+
+document.getElementById("playMusic").addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (audio.paused) {
+        reproducir();
+    } else {
+        audio.pause();
+        playIcon.classList.remove("pause");
+    }
+});
+
+["prevMusic", "nextMusic"].forEach(function (id) {
+    document.getElementById(id).addEventListener("click", function (e) {
+        e.stopPropagation();
+        audio.currentTime = 0;
+        reproducir();
+    });
+});
+
+audio.addEventListener("timeupdate", function () {
+    if (!audio.duration || isNaN(audio.duration)) return;
+    const p = (audio.currentTime / audio.duration) * 100;
+    progress.style.width = p + "%";
+    dot.style.left = p + "%";
+});
+
+progressContainer.addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (!audio.duration) return;
+    const rect = progressContainer.getBoundingClientRect();
+    const p = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audio.currentTime = p * audio.duration;
+});
+
+audio.addEventListener("ended", function () {
+    playIcon.classList.remove("pause");
+    progress.style.width = "0%";
+    dot.style.left = "0%";
+    audio.currentTime = 0;
+});
+
+/* ===== FLECHA BAJAR: se oculta al empezar a bajar ===== */
+const flecha = document.getElementById("flechaBajar");
+
+function controlarFlecha() {
+    flecha.classList.toggle("oculta", window.scrollY > 80);
+}
+window.addEventListener("scroll", controlarFlecha);
+controlarFlecha();
+
+/* ===== RECARGA DE IMÁGENES PNG ===== */
+window.addEventListener("load", function () {
+    document.querySelectorAll("img").forEach(function (img) {
+        const src = img.getAttribute("src");
+        if (src && src.toLowerCase().endsWith(".png") && !src.includes("?v=")) {
+            img.src = src + "?v=" + new Date().getTime();
+        }
+    });
+});
+
+/* ===== CONTADOR ===== */
+const weddingDate = new Date("December 05, 2026 17:30:00").getTime();
+
+function dos(n) { return n < 10 ? "0" + n : n; }
+
+function updateCountdown() {
+    const distance = weddingDate - new Date().getTime();
+
+    if (distance <= 0) {
+        ["days", "hours", "minutes", "seconds"].forEach(function (id) {
+            document.getElementById(id).innerText = "00";
+        });
+        return;
+    }
+
+    document.getElementById("days").innerText = dos(Math.floor(distance / 86400000));
+    document.getElementById("hours").innerText = dos(Math.floor((distance % 86400000) / 3600000));
+    document.getElementById("minutes").innerText = dos(Math.floor((distance % 3600000) / 60000));
+    document.getElementById("seconds").innerText = dos(Math.floor((distance % 60000) / 1000));
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+/* ===== ANIMACIÓN AL HACER SCROLL ===== */
+const revealElements = document.querySelectorAll(".reveal");
+
+function revealOnScroll() {
+    revealElements.forEach(function (el) {
+        if (el.getBoundingClientRect().top < window.innerHeight - 100) {
+            el.classList.add("active");
+        }
+    });
+}
+window.addEventListener("scroll", revealOnScroll);
+revealOnScroll();
+
+/* ===== DATOS DEL INVITADO ===== */
+const urlDatos = new URLSearchParams(window.location.search);
+
+let nombre = urlDatos.get("invitado");
+const cantidad = parseInt(urlDatos.get("pases"), 10);
+
+const nombreInvitado = document.getElementById("nombre-invitado");
+const numeroPases = document.getElementById("num-pases");
+const textoPases = document.getElementById("texto-pases");
+
+if (nombre && nombreInvitado) {
+    nombre = nombre.replace(/%20/gi, " ").replace(/\+/g, " ").replace(/\s+/g, " ").normalize("NFC").trim();
+    nombreInvitado.textContent = nombre;
+}
+
+if (cantidad > 0 && numeroPases) {
+    numeroPases.textContent = cantidad;
+    if (textoPases) {
+        textoPases.textContent = cantidad === 1 ? "pase para ti" : "pases para ustedes";
+    }
+}
+</script>
+
+</body>
+</html>
