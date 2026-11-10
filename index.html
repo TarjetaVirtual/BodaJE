@@ -72,11 +72,20 @@ img {
     50% { transform: translate(-50%, -15px); }
 }
 
-/* ===== VIDEO + FLECHA BAJAR ===== */
+/* ===== VIDEO + FLECHA BAJAR (VIDEO MÁS GRANDE) ===== */
 .video-inicio { width: 100%; }
 
-.video-wrap { position: relative; width: 100%; max-width: 650px; margin: 0 auto; }
-.video-wrap video { width: 100%; display: block; object-fit: cover; }
+.video-wrap { position: relative; width: 100%; max-width: 100%; margin: 0 auto; }
+.foto-inicio .video-wrap video.foto-entrada-celular {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    height: auto;
+    min-height: 85vh;
+    min-height: 85svh;
+    display: block;
+    object-fit: cover;
+}
 
 .flecha-bajar {
     position: absolute;
@@ -171,7 +180,7 @@ img {
 .capsula-tiempo h3, .capsula-tiempo p, .preparate, .nos-vemos, .timer-grid, .timer-item,
 .timer-item span, .timer-label, .colon { color: #4e3b09 !important; }
 
-/* ===== TARJETA INVITADO (misma letra que CEREMONIA) ===== */
+/* ===== TARJETA INVITADO ===== */
 .tarjeta-invitado {
     width: 90%;
     max-width: 380px;
@@ -216,6 +225,20 @@ img {
 }
 .invitado-circulo span { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; line-height: 1; color: #614e1a; }
 .invitado-texto { font-size: 15px; letter-spacing: 1.5px; margin: 18px 0 0; }
+
+.invitado-nota {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-style: italic;
+    letter-spacing: 1.5px;
+    line-height: 1.5;
+    margin: 22px auto 0;
+    padding-top: 16px;
+    max-width: 240px;
+    border-top: 1px solid rgba(141, 122, 100, .35);
+    color: #614e1a;
+    opacity: .85;
+}
 
 /* ===== CONTADOR ===== */
 .capsula-tiempo {
@@ -273,27 +296,49 @@ img {
 
 /* ===== CARRUSEL ===== */
 .carrusel-boda { width: 100%; margin: 0; padding: 0; overflow: hidden; position: relative; }
-.carrusel-track { display: flex; width: 100%; animation: moverCarrusel 20s infinite; }
+.carrusel-viewport { position: relative; width: 100%; overflow: hidden; touch-action: pan-y; }
+.carrusel-track { display: flex; width: 100%; transition: transform .5s ease; }
 .carrusel-slide { min-width: 100%; width: 100%; flex-shrink: 0; position: relative; }
-.carrusel-slide img { width: 100%; height: 600px; display: block; object-fit: cover; object-position: center; }
+.carrusel-slide img { width: 100%; height: 600px; display: block; object-fit: cover; object-position: center; cursor: zoom-in; }
 
-@keyframes moverCarrusel {
-    0%, 28% {
-        transform: translateX(0);
-    }
-
-    33%, 61% {
-        transform: translateX(-100%);
-    }
-
-    66%, 94% {
-        transform: translateX(-200%);
-    }
-
-    100% {
-        transform: translateX(0);
-    }
+.car-btn {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 42px; height: 42px; border: none; border-radius: 50%;
+    background: rgba(255,255,255,.75); color: #5B463B;
+    font-size: 22px; line-height: 1; cursor: pointer; z-index: 5;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25); -webkit-tap-highlight-color: transparent;
 }
+.car-btn:hover { background: #fff; }
+.car-prev { left: 10px; }
+.car-next { right: 10px; }
+
+.car-dots { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 5; }
+.car-dots button { width: 9px; height: 9px; padding: 0; border: none; border-radius: 50%; background: rgba(255,255,255,.55); cursor: pointer; }
+.car-dots button.activo { background: #fff; transform: scale(1.25); }
+
+/* ===== PANTALLA COMPLETA ===== */
+.lightbox {
+    position: fixed; inset: 0; background: rgba(0,0,0,.95);
+    z-index: 1000000; display: none;
+    align-items: center; justify-content: center;
+    touch-action: pan-y;
+}
+.lightbox.abierto { display: flex; }
+.lightbox img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; margin: 0; }
+.lb-cerrar {
+    position: absolute; top: 15px; right: 15px; width: 44px; height: 44px;
+    border: none; border-radius: 50%; background: rgba(255,255,255,.2);
+    color: #fff; font-size: 26px; cursor: pointer; z-index: 3;
+}
+.lb-btn {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 46px; height: 46px; border: none; border-radius: 50%;
+    background: rgba(255,255,255,.2); color: #fff; font-size: 26px; cursor: pointer; z-index: 3;
+}
+.lb-prev { left: 12px; }
+.lb-next { right: 12px; }
+.lb-contador { position: absolute; bottom: 18px; left: 0; right: 0; text-align: center; color: #fff; font-size: 13px; letter-spacing: 2px; }
 
 /* ===== CRÉDITOS ===== */
 .creditos { width: 100%; text-align: center; padding: 20px 10px; font-size: .5rem; letter-spacing: 1px; color: #1c1006; opacity: .4; text-transform: uppercase; box-sizing: border-box; }
@@ -304,7 +349,12 @@ img {
     section.foto-inicio { padding: 15px 20px; }
     .foto-inicio .foto-entrada-celular { width: auto; max-width: 650px; max-height: 650px; height: auto; object-fit: contain; display: block; margin: 0 auto; }
     .foto-inicio img[src="reg.jpg"] { width: 100%; max-width: 900px; max-height: 700px; }
-    .video-wrap video { max-height: 650px; }
+
+    /* VIDEO GRANDE EN PC */
+    section.video-inicio { padding: 0; }
+    .video-wrap { max-width: 1100px; }
+    .foto-inicio .video-wrap video.foto-entrada-celular { min-height: 0; height: 92vh; }
+
     .carrusel-boda { max-width: 1000px; margin: 30px auto; }
     .carrusel-slide img { height: 550px; }
 }
@@ -357,25 +407,11 @@ img {
     .tarjeta-dress-blanca p { font-size: 15px !important; }
     .tarjeta-dress-blanca .color-swatch span { font-size: 13px !important; }
 
-    /* TARJETA DE INVITADO: Georgia, igual que las demás secciones */
     .tarjeta-invitado, .tarjeta-invitado * {
         font-family: Georgia, 'Times New Roman', serif !important;
         color: #5B463B !important;
     }
     .invitado-nombre { font-size: 22px; font-weight: 400; letter-spacing: 2px; }
-}/* ===== NOTA SIN NIÑOS ===== */
-.invitado-nota {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 13px;
-    font-style: italic;
-    letter-spacing: 1.5px;
-    line-height: 1.5;
-    margin: 22px auto 0;
-    padding-top: 16px;
-    max-width: 240px;
-    border-top: 1px solid rgba(141, 122, 100, .35);
-    color: #614e1a;
-    opacity: .85;
 }
 </style>
 </head>
@@ -394,8 +430,7 @@ img {
         <video id="videoInicio" src="video.mp4" poster="4.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture preload="auto" class="foto-entrada-celular"></video>
 
         <a href="#musica" class="flecha-bajar" id="flechaBajar" aria-label="Bajar">
-            
-            
+            <i></i>
         </a>
     </div>
 </section>
@@ -422,11 +457,11 @@ img {
 
 <!-- FOTOS -->
 <section class="foto-inicio"><img src="fod.png" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
-<section class="foto-inicio"><img src="5.png" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
+<section class="foto-inicio"><img src="5.jpg" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
 <section class="foto-inicio" style="width:100%; display:flex; justify-content:center; overflow:hidden;">
     <img src="padres.jpg" alt="Padres" class="foto-entrada-celular">
 </section>
-<section class="foto-inicio"><img src="Captura de pantalla 2026-11-10 125844.png" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
+<section class="foto-inicio"><img src="Captura de pantalla 2026-11-10 125844.jpg" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
 
 <!-- CEREMONIA Y RECEPCIÓN -->
 <div class="tarjeta-ubicacion">
@@ -452,12 +487,12 @@ img {
     <br>
     <a href="https://maps.app.goo.gl/M3AwhzXP1nx1fDD1A" target="_blank" class="btn-ubicacion">VER UBICACIÓN</a>
 </div>
-<section class="foto-inicio"><img src="Captura de pantalla 2026-11-10 130242.png" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
+<section class="foto-inicio"><img src="Captura de pantalla 2026-11-10 130242.jpg" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
 
 <section class="foto-inicio"><img src="itinerario.png" alt="Itinerario" class="foto-entrada-celular"></section>
 
 <section class="foto-inicio" style="width:100%; display:flex; justify-content:center; overflow:hidden;">
-    <img src="4.png" alt="Efrain y Mishel" class="foto-entrada-celular">
+    <img src="4.jpg" alt="Efrain y Mishel" class="foto-entrada-celular">
 </section>
 <section class="foto-inicio" style="width:100%; display:flex; justify-content:center; overflow:hidden;">
     <img src="reg.jpg" alt="Regalos" class="foto-entrada-celular">
@@ -473,35 +508,41 @@ img {
 
     <div style="width:60px; height:1px; background:rgb(109,88,31); margin:15px auto; opacity:.5;"></div>
 
-   <div style="margin-bottom:20px; color:rgb(109,88,31); font-size:.9rem; text-align:center;">
-    <p style="letter-spacing:2px; text-transform:uppercase; font-family:'Cinzel',serif; font-weight:bold; margin-bottom:15px;">
-        Color a Evitar
-    </p>
+    <div style="margin-bottom:20px; color:rgb(109,88,31); font-size:.9rem; text-align:center;">
+        <p style="letter-spacing:2px; text-transform:uppercase; font-family:'Cinzel',serif; font-weight:bold; margin-bottom:15px;">
+            Color a Evitar
+        </p>
 
-    <div style="display:flex; justify-content:center; align-items:center; gap:16px; flex-wrap:wrap; padding:12px;">
-        <div class="color-swatch"><div class="color-circle" style="background-color:#C8A2C8;"></div><span>Lila</span></div>
+        <div style="display:flex; justify-content:center; align-items:center; gap:16px; flex-wrap:wrap; padding:12px;">
+            <div class="color-swatch"><div class="color-circle" style="background-color:#C8A2C8;"></div><span>Lila</span></div>
+        </div>
+
+        <p style="margin-top:10px; font-family:'Cinzel',serif; font-size:0.65rem !important; letter-spacing:1px">
+            Todos los colores están permitidos menos lila
+        </p>
     </div>
-
-    <p style="margin-top:10px; font-family:'Cinzel',serif; font-size:0.65rem !important; letter-spacing:1px">
-        Todos los colores están permitidos menos lila
-    </p>
-</div>
 </div>
 
 <br><br>
 
 <!-- CARRUSEL -->
 <section class="carrusel-boda">
-    <div class="carrusel-track">
-                <div class="carrusel-slide"><img src="Captura de pantalla 2026-11-10 130148.png" alt="Efrain y Mishel"></div>
-        <div class="carrusel-slide"><img src="Captura de pantalla 2026-11-10 130604.png" alt="Efrain y Mishel"></div>
-
-        <div class="carrusel-slide"><img src="Captura de pantalla 2026-11-10 130109.png" alt="Efrain y Mishel"></div>
+    <div class="carrusel-viewport" id="carruselViewport">
+        <div class="carrusel-track" id="carruselTrack">
+            <div class="carrusel-slide"><img src="Captura de pantalla 2026-11-10 130148.jpg" alt="Efrain y Mishel"></div>
+            <div class="carrusel-slide"><img src="Captura de pantalla 2026-11-10 130604.jpg" alt="Efrain y Mishel"></div>
+            <div class="carrusel-slide"><img src="Captura de pantalla 2026-11-10 130109.jpg" alt="Efrain y Mishel"></div>
+            <div class="carrusel-slide"><img src="DSC08872.jpg" alt="Efrain y Mishel"></div>
+            <div class="carrusel-slide"><img src="DSC09188.jpg" alt="Efrain y Mishel"></div>
+        </div>
+        <button class="car-btn car-prev" id="carPrev" aria-label="Anterior">&#10094;</button>
+        <button class="car-btn car-next" id="carNext" aria-label="Siguiente">&#10095;</button>
+        <div class="car-dots" id="carDots"></div>
     </div>
-     <div style="display:flex; flex-direction:column; gap:12px; align-items:center; margin-top:25px;">
+
+    <div style="display:flex; flex-direction:column; gap:12px; align-items:center; margin-top:25px;">
         <a href="https://limashow.pixieset.com/edsonandjulieta/"
            class="btn-ubicacion" target="_blank" style="width:80%; text-align:center;">📸 VER GALERÍA</a>
-
     </div>
 </section>
 
@@ -520,7 +561,7 @@ img {
            class="btn-ubicacion" target="_blank" style="width:80%; text-align:center;">🎵 SUGERIR MÚSICA</a>
     </div>
 </div>
-<section class="foto-inicio"><img src="Captura de pantalla 2026-11-10 130424.png" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
+<section class="foto-inicio"><img src="Captura de pantalla 2026-11-10 130424.jpg" alt="Efrain y Mishel" class="foto-entrada-celular"></section>
 
 <!-- INVITADO Y PASES -->
 <div class="tarjeta-invitado reveal">
@@ -533,7 +574,7 @@ img {
         <p class="invitado-reservado">Hemos reservado</p>
         <div class="invitado-circulo"><span id="num-pases">1</span></div>
         <p class="invitado-texto" id="texto-pases">pase para ti</p>
-       <!-- <p class="invitado-nota">Por ser una celebración para adultos,<br>agradecemos su comprensión al no asistir con niños.</p>-->
+        <!-- <p class="invitado-nota">Por ser una celebración para adultos,<br>agradecemos su comprensión al no asistir con niños.</p> -->
     </div>
 </div>
 
@@ -569,6 +610,15 @@ img {
     </a>
 </div>
 
+<!-- PANTALLA COMPLETA -->
+<div class="lightbox" id="lightbox">
+    <button class="lb-cerrar" id="lbCerrar" aria-label="Cerrar">&times;</button>
+    <button class="lb-btn lb-prev" id="lbPrev" aria-label="Anterior">&#10094;</button>
+    <img id="lbImg" src="" alt="">
+    <button class="lb-btn lb-next" id="lbNext" aria-label="Siguiente">&#10095;</button>
+    <div class="lb-contador" id="lbContador"></div>
+</div>
+
 <script>
 /* ===== ELEMENTOS PRINCIPALES ===== */
 const preloader = document.getElementById("preloader");
@@ -595,13 +645,11 @@ preloader.addEventListener("click", function () {
     preloader.classList.add("hide");
     window.scrollTo({ top: 0, behavior: "instant" });
 
-    /* El toque cuenta como interacción: aquí arranca el video (celular y laptop) */
     if (videoInicio) {
         videoInicio.currentTime = 0;
         iniciarVideo();
     }
 
-    /* Reintento por si el navegador lo dejó en pausa durante la transición */
     setTimeout(function () {
         if (videoInicio && videoInicio.paused) iniciarVideo();
     }, 900);
@@ -611,7 +659,6 @@ preloader.addEventListener("click", function () {
         .catch(function () {});
 }, { once: true });
 
-/* Reanudar el video si el navegador lo pausa al volver a la pestaña */
 document.addEventListener("visibilitychange", function () {
     if (!document.hidden && invitacionAbierta) iniciarVideo();
 });
@@ -685,6 +732,100 @@ window.addEventListener("load", function () {
         }
     });
 });
+
+/* ===== CARRUSEL + PANTALLA COMPLETA ===== */
+(function () {
+    const track = document.getElementById("carruselTrack");
+    const viewport = document.getElementById("carruselViewport");
+    const imgs = Array.from(track.querySelectorAll("img"));
+    const dotsBox = document.getElementById("carDots");
+    const total = imgs.length;
+    let idx = 0, auto;
+
+    const dots = imgs.map(function (_, i) {
+        const b = document.createElement("button");
+        b.setAttribute("aria-label", "Foto " + (i + 1));
+        b.addEventListener("click", function () { ir(i); reiniciarAuto(); });
+        dotsBox.appendChild(b);
+        return b;
+    });
+
+    function ir(i) {
+        idx = (i + total) % total;
+        track.style.transform = "translateX(-" + (idx * 100) + "%)";
+        dots.forEach(function (d, n) { d.classList.toggle("activo", n === idx); });
+    }
+    function reiniciarAuto() {
+        clearInterval(auto);
+        auto = setInterval(function () { ir(idx + 1); }, 5000);
+    }
+
+    document.getElementById("carPrev").addEventListener("click", function () { ir(idx - 1); reiniciarAuto(); });
+    document.getElementById("carNext").addEventListener("click", function () { ir(idx + 1); reiniciarAuto(); });
+
+    let x0 = null;
+    viewport.addEventListener("touchstart", function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+    viewport.addEventListener("touchend", function (e) {
+        if (x0 === null) return;
+        const dx = e.changedTouches[0].clientX - x0;
+        if (Math.abs(dx) > 40) { ir(dx < 0 ? idx + 1 : idx - 1); reiniciarAuto(); }
+        x0 = null;
+    });
+
+    ir(0);
+    reiniciarAuto();
+
+    /* ----- pantalla completa ----- */
+    const lb = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lbImg");
+    const lbContador = document.getElementById("lbContador");
+    let lbIdx = 0;
+
+    function mostrar(i) {
+        lbIdx = (i + total) % total;
+        lbImg.src = imgs[lbIdx].src;
+        lbImg.alt = imgs[lbIdx].alt;
+        lbContador.textContent = (lbIdx + 1) + " / " + total;
+    }
+    function abrir(i) {
+        mostrar(i);
+        lb.classList.add("abierto");
+        document.body.style.overflow = "hidden";
+        clearInterval(auto);
+    }
+    function cerrar() {
+        lb.classList.remove("abierto");
+        document.body.style.overflow = "";
+        ir(lbIdx);
+        reiniciarAuto();
+    }
+
+    imgs.forEach(function (img, i) {
+        img.addEventListener("click", function () { abrir(i); });
+    });
+
+    document.getElementById("lbCerrar").addEventListener("click", cerrar);
+    document.getElementById("lbPrev").addEventListener("click", function () { mostrar(lbIdx - 1); });
+    document.getElementById("lbNext").addEventListener("click", function () { mostrar(lbIdx + 1); });
+
+    lb.addEventListener("click", function (e) { if (e.target === lb) cerrar(); });
+
+    document.addEventListener("keydown", function (e) {
+        if (!lb.classList.contains("abierto")) return;
+        if (e.key === "Escape") cerrar();
+        if (e.key === "ArrowLeft") mostrar(lbIdx - 1);
+        if (e.key === "ArrowRight") mostrar(lbIdx + 1);
+    });
+
+    let lx0 = null;
+    lb.addEventListener("touchstart", function (e) { lx0 = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener("touchend", function (e) {
+        if (lx0 === null) return;
+        const dx = e.changedTouches[0].clientX - lx0;
+        if (Math.abs(dx) > 40) mostrar(dx < 0 ? lbIdx + 1 : lbIdx - 1);
+        lx0 = null;
+    });
+})();
 
 /* ===== CONTADOR ===== */
 const weddingDate = new Date("December 05, 2026 17:30:00").getTime();
