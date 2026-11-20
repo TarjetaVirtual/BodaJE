@@ -375,8 +375,8 @@ img { display: block; height: auto; max-width: 100%; margin-left: auto; margin-r
 <!-- VIDEO FINAL (SIN SONIDO) -->
 <section class="foto-inicio video-inicio video-final">
     <div class="video-wrap">
-        <video id="videoFinal" autoplay poster="5.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate nofullscreen" preload="metadata" class="foto-entrada-celular">
-            <source src="video2.mp4" type='video/mp4; codecs="avc1.4D401F, mp4a.40.2"'>
+        <video id="videoFinal" autoplay poster="5.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate nofullscreen" preload="none" class="foto-entrada-celular">
+            <source data-src="video2.mp4" type='video/mp4; codecs="avc1.4D401F, mp4a.40.2"'>
         </video>
         <button class="video-play oculta" id="videoFinalPlay" aria-label="Reproducir video"><span></span></button>
     </div>
@@ -413,8 +413,9 @@ let invitacionAbierta = false;
      (así los celulares lentos no decodifican dos videos a la vez).
    - El toque en "Abrir Invitación" desbloquea la reproducción de AMBOS videos.
    - Si el celular aún así lo bloquea, aparece el botón de play como respaldo. */
-function crearAutoplay(v, btn) {
+function crearAutoplay(v, btn, lazy) {
     var enVista = false;
+    var cargado = !lazy;   /* en modo lazy el video no se descarga hasta estar cerca de la pantalla */
     var tieneObserver = ("IntersectionObserver" in window);
 
     v.muted = true; v.defaultMuted = true; v.volume = 0;
@@ -423,7 +424,19 @@ function crearAutoplay(v, btn) {
 
     function permitido() { return tieneObserver ? enVista : true; }
 
+    /* Carga diferida: recién aquí se asigna la ruta del video y se empieza a descargar */
+    function cargar() {
+        if (cargado) return;
+        cargado = true;
+        var fuentes = v.querySelectorAll("source[data-src]");
+        for (var i = 0; i < fuentes.length; i++) { fuentes[i].src = fuentes[i].getAttribute("data-src"); }
+        v.preload = "auto";
+        v.load();
+        vigilarCarga();
+    }
+
     function intentar(forzar) {
+        if (!cargado) { if (forzar || permitido()) cargar(); return; }
         if (!v.paused && !v.ended) return;
         if (!forzar && !permitido()) return;
         v.muted = true;
@@ -448,6 +461,7 @@ function crearAutoplay(v, btn) {
     }
 
     btn.addEventListener("click", function () {
+        if (!cargado) { cargar(); return; }
         if (v.readyState === 0 || v.error) { v.load(); }
         intentar(true);
     });
@@ -464,6 +478,7 @@ function crearAutoplay(v, btn) {
        Con <source> el error NO llega al video, por eso se escucha en fase de captura. */
     var reintentoError = false;
     v.addEventListener("error", function () {
+        if (!cargado) return;
         if (!v.paused && v.readyState > 2) return;
         btn.classList.remove("oculta");
         if (!reintentoError) {
@@ -475,9 +490,12 @@ function crearAutoplay(v, btn) {
     }, true);
 
     /* Si pasados 8 s el navegador no encontró ningún formato reproducible (networkState 3), usa el póster */
-    setTimeout(function () {
-        if (v.readyState === 0 && (v.networkState === 3 || v.error)) { mostrarPoster(); }
-    }, 8000);
+    function vigilarCarga() {
+        setTimeout(function () {
+            if (v.readyState === 0 && (v.networkState === 3 || v.error)) { mostrarPoster(); }
+        }, 8000);
+    }
+    if (cargado) { vigilarCarga(); }
     v.addEventListener("playing", function () { btn.classList.add("oculta"); });
 
     /* Intenta reproducir en cada etapa de carga */
@@ -515,11 +533,25 @@ function crearAutoplay(v, btn) {
         if ((v.paused || v.ended) && permitido()) intentar(false);
     }, 2000);
 
+    /* Modo lazy: empieza a descargar cuando falten ~800 px para llegar al video */
+    if (lazy) {
+        if (tieneObserver) {
+            var obsCarga = new IntersectionObserver(function (entries) {
+                entries.forEach(function (en) {
+                    if (en.isIntersecting) { cargar(); obsCarga.disconnect(); }
+                });
+            }, { rootMargin: "800px 0px 800px 0px" });
+            obsCarga.observe(v);
+        } else {
+            window.addEventListener("load", cargar);
+        }
+    }
+
     return { intentar: intentar, desbloquear: desbloquear };
 }
 
 const V1 = crearAutoplay(videoInicio, videoPlay);
-const V2 = crearAutoplay(videoFinal, videoFinalPlay);
+const V2 = crearAutoplay(videoFinal, videoFinalPlay, true);
 /* El video de inicio queda visible desde el principio */
 V1.intentar(false);
 
@@ -542,7 +574,6 @@ function abrirInvitacion() {
     invitacionAbierta = true;
 
     V1.desbloquear();
-    V2.desbloquear();
     audio.play().then(function () { playIcon.classList.add("pause"); }).catch(function () {});
 
     preloader.classList.add("hide");
