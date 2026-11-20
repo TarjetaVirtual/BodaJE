@@ -406,11 +406,20 @@ const videoFinal = document.getElementById("videoFinal");
 const videoFinalPlay = document.getElementById("videoFinalPlay");
 let invitacionAbierta = false;
 
-/* ===== AUTOPLAY EN BUCLE DE LOS VIDEOS (siempre en mute) ===== */
-function crearAutoplay(v, btn, permitido) {
+/* ===== AUTOPLAY EN BUCLE DE LOS VIDEOS (siempre en mute) =====
+   - Cada video solo se reproduce mientras está visible en pantalla
+     (así los celulares lentos no decodifican dos videos a la vez).
+   - El toque en "Abrir Invitación" desbloquea la reproducción de AMBOS videos.
+   - Si el celular aún así lo bloquea, aparece el botón de play como respaldo. */
+function crearAutoplay(v, btn) {
+    var enVista = false;
+    var tieneObserver = ("IntersectionObserver" in window);
+
     v.muted = true; v.defaultMuted = true; v.volume = 0;
-    v.loop = true;
-    v.setAttribute("muted", ""); v.setAttribute("playsinline", "");
+    v.loop = true; v.playsInline = true; v.autoplay = true;
+    v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("webkit-playsinline", "");
+
+    function permitido() { return tieneObserver ? enVista : true; }
 
     function intentar(forzar) {
         if (!v.paused && !v.ended) return;
@@ -419,7 +428,20 @@ function crearAutoplay(v, btn, permitido) {
         var p = v.play();
         if (p && typeof p.then === "function") {
             p.then(function () { btn.classList.add("oculta"); })
-             .catch(function () { btn.classList.remove("oculta"); });
+             .catch(function () { if (permitido()) btn.classList.remove("oculta"); });
+        }
+    }
+
+    /* Desbloqueo: se llama DENTRO del toque del usuario. Reproduce y, si el
+       video no está a la vista, lo pausa enseguida (queda "autorizado"). */
+    function desbloquear() {
+        v.muted = true;
+        var p = v.play();
+        if (p && typeof p.then === "function") {
+            p.then(function () {
+                btn.classList.add("oculta");
+                if (!permitido()) v.pause();
+            }).catch(function () { btn.classList.remove("oculta"); });
         }
     }
 
@@ -444,13 +466,13 @@ function crearAutoplay(v, btn, permitido) {
         v.addEventListener(ev, function () { intentar(false); });
     });
 
-    /* Si termina (algunos celulares ignoran loop), reinicia de inmediato */
+    /* Si termina (algunos celulares ignoran loop), reinicia */
     v.addEventListener("ended", function () {
         v.currentTime = 0;
-        intentar(true);
+        intentar(false);
     });
 
-    /* Si el navegador lo pausa solo, lo reanuda */
+    /* Si el navegador lo pausa solo estando visible, lo reanuda */
     v.addEventListener("pause", function () {
         if (!v.ended && permitido()) setTimeout(function () { intentar(false); }, 300);
     });
@@ -458,45 +480,62 @@ function crearAutoplay(v, btn, permitido) {
     /* Nunca permitir sonido */
     v.addEventListener("volumechange", function () { if (!v.muted || v.volume > 0) { v.muted = true; v.volume = 0; } });
 
-    /* Vigilante: cada 2 s revisa que siga reproduciéndose */
+    /* Reproducir al entrar en pantalla, pausar al salir */
+    if (tieneObserver) {
+        new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+                enVista = en.isIntersecting && en.intersectionRatio > 0.15;
+                if (enVista) { intentar(false); }
+                else if (!v.paused) { v.pause(); }
+            });
+        }, { threshold: [0, 0.15, 0.5] }).observe(v);
+    }
+
+    /* Vigilante: cada 2 s revisa que siga reproduciéndose si está visible */
     setInterval(function () {
-        if (v.paused || v.ended) intentar(false);
+        if ((v.paused || v.ended) && permitido()) intentar(false);
     }, 2000);
 
-    return intentar;
+    return { intentar: intentar, desbloquear: desbloquear };
 }
 
-/* VIDEO 1 y VIDEO 2: ambos en bucle continuo, siempre en mute */
-const intentarV1 = crearAutoplay(videoInicio, videoPlay, function () { return true; });
-const intentarV2 = crearAutoplay(videoFinal, videoFinalPlay, function () { return true; });
-intentarV1(false);
-intentarV2(false);
+const V1 = crearAutoplay(videoInicio, videoPlay);
+const V2 = crearAutoplay(videoFinal, videoFinalPlay);
+/* El video de inicio queda visible desde el principio */
+V1.intentar(false);
 
 /* Reintentos: primer toque/scroll del usuario y al volver a la pestaña */
-["touchstart", "click", "scroll"].forEach(function (ev) {
+["touchstart", "touchend", "click", "scroll"].forEach(function (ev) {
     window.addEventListener(ev, function () {
-        intentarV1(false);
-        intentarV2(false);
+        V1.intentar(false);
+        V2.intentar(false);
     }, { once: true, passive: true });
 });
 document.addEventListener("visibilitychange", function () {
-    if (!document.hidden) { intentarV1(false); intentarV2(false); }
+    if (!document.hidden) { V1.intentar(false); V2.intentar(false); }
 });
-window.addEventListener("load", function () { intentarV1(false); intentarV2(false); });
+window.addEventListener("load", function () { V1.intentar(false); V2.intentar(false); });
 
-/* PORTADA */
-preloader.addEventListener("click", function () {
+/* PORTADA: el toque abre la invitación y desbloquea videos y música.
+   Todo el play() va PRIMERO y de forma síncrona, dentro del gesto del usuario. */
+function abrirInvitacion() {
+    if (invitacionAbierta) return;
     invitacionAbierta = true;
+
+    V1.desbloquear();
+    V2.desbloquear();
+    audio.play().then(function () { playIcon.classList.add("pause"); }).catch(function () {});
+
     preloader.classList.add("hide");
     window.scrollTo({ top: 0, behavior: "instant" });
 
-    /* El toque del usuario desbloquea la reproducción: arrancan los dos videos */
-    intentarV1(true);
-    setTimeout(function () { intentarV2(true); }, 600);
-    setTimeout(function () { intentarV1(true); intentarV2(true); }, 1500);
-
-    audio.play().then(function () { playIcon.classList.add("pause"); }).catch(function () {});
-}, { once: true });
+    /* Refuerzos por si el celular tardó en cargar el video */
+    setTimeout(function () { V1.intentar(true); }, 500);
+    setTimeout(function () { V1.intentar(true); }, 1500);
+    setTimeout(function () { V1.intentar(true); }, 3000);
+}
+preloader.addEventListener("click", abrirInvitacion);
+preloader.addEventListener("touchend", function (e) { e.preventDefault(); abrirInvitacion(); }, { passive: false });
 
 /* REPRODUCTOR */
 const progressContainer = document.getElementById("progressContainer");
