@@ -29,6 +29,8 @@ img { display: block; height: auto; max-width: 100%; margin-left: auto; margin-r
 .video-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 76px; height: 76px; border: none; border-radius: 50%; background: rgba(255,255,255,.85); cursor: pointer; z-index: 6; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.35); -webkit-tap-highlight-color: transparent; }
 .video-play span { width: 0; height: 0; border-top: 14px solid transparent; border-bottom: 14px solid transparent; border-left: 22px solid #5B463B; margin-left: 6px; }
 .video-play.oculta { display: none; }
+.video-wrap.sin-video { background-size: cover; background-position: center; background-repeat: no-repeat; }
+.video-wrap.sin-video video, .video-wrap.sin-video .video-play { display: none !important; }
 .video-final { width: 100%; margin: 20px auto 0; background: #000; }
 
 .flecha-bajar { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; color: #fff; text-decoration: none; font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 4px; text-shadow: 0 2px 8px rgba(0,0,0,.6); transition: opacity .4s; z-index: 5; }
@@ -207,7 +209,7 @@ img { display: block; height: auto; max-width: 100%; margin-left: auto; margin-r
 <section class="foto-inicio video-inicio">
     <div class="video-wrap">
         <video id="videoInicio" autoplay poster="4.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture preload="auto" class="foto-entrada-celular">
-            <source src="video1.mp4" type="video/mp4">
+            <source src="video1.mp4" type='video/mp4; codecs="avc1.4D401F, mp4a.40.2"'>
         </video>
         <button class="video-play oculta" id="videoPlay" aria-label="Reproducir video"><span></span></button>
         <a href="#musica" class="flecha-bajar" id="flechaBajar" aria-label="Bajar"><i></i></a>
@@ -374,7 +376,7 @@ img { display: block; height: auto; max-width: 100%; margin-left: auto; margin-r
 <section class="foto-inicio video-inicio video-final">
     <div class="video-wrap">
         <video id="videoFinal" autoplay poster="5.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate nofullscreen" preload="metadata" class="foto-entrada-celular">
-            <source src="video2.mp4" type="video/mp4">
+            <source src="video2.mp4" type='video/mp4; codecs="avc1.4D401F, mp4a.40.2"'>
         </video>
         <button class="video-play oculta" id="videoFinalPlay" aria-label="Reproducir video"><span></span></button>
     </div>
@@ -450,15 +452,32 @@ function crearAutoplay(v, btn) {
         intentar(true);
     });
 
-    /* Si el video falla al cargar, reintenta una vez */
+    /* Respaldo: si el video no se puede cargar/decodificar, muestra la foto (póster) en vez de negro */
+    function mostrarPoster() {
+        var wrap = v.parentNode;
+        var poster = v.getAttribute("poster");
+        if (poster) { wrap.style.backgroundImage = 'url("' + poster + '")'; }
+        wrap.classList.add("sin-video");
+    }
+
+    /* Si el video falla al cargar, reintenta una vez y luego muestra el póster.
+       Con <source> el error NO llega al video, por eso se escucha en fase de captura. */
     var reintentoError = false;
     v.addEventListener("error", function () {
+        if (!v.paused && v.readyState > 2) return;
         btn.classList.remove("oculta");
         if (!reintentoError) {
             reintentoError = true;
             setTimeout(function () { v.load(); intentar(true); }, 1000);
+        } else {
+            mostrarPoster();
         }
-    });
+    }, true);
+
+    /* Si pasados 8 s el navegador no encontró ningún formato reproducible (networkState 3), usa el póster */
+    setTimeout(function () {
+        if (v.readyState === 0 && (v.networkState === 3 || v.error)) { mostrarPoster(); }
+    }, 8000);
     v.addEventListener("playing", function () { btn.classList.add("oculta"); });
 
     /* Intenta reproducir en cada etapa de carga */
