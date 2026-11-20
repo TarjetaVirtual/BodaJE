@@ -206,7 +206,7 @@ img { display: block; height: auto; max-width: 100%; margin-left: auto; margin-r
 <!-- VIDEO DE INICIO -->
 <section class="foto-inicio video-inicio">
     <div class="video-wrap">
-        <video id="videoInicio" poster="4.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture preload="auto" class="foto-entrada-celular">
+        <video id="videoInicio" autoplay poster="4.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture preload="auto" class="foto-entrada-celular">
             <source src="video1.mp4" type="video/mp4">
         </video>
         <button class="video-play oculta" id="videoPlay" aria-label="Reproducir video"><span></span></button>
@@ -373,7 +373,7 @@ img { display: block; height: auto; max-width: 100%; margin-left: auto; margin-r
 <!-- VIDEO FINAL (SIN SONIDO) -->
 <section class="foto-inicio video-inicio video-final">
     <div class="video-wrap">
-        <video id="videoFinal" poster="5.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate nofullscreen" preload="auto" class="foto-entrada-celular">
+        <video id="videoFinal" autoplay poster="5.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate nofullscreen" preload="auto" class="foto-entrada-celular">
             <source src="video2.mp4" type="video/mp4">
         </video>
         <button class="video-play oculta" id="videoFinalPlay" aria-label="Reproducir video"><span></span></button>
@@ -402,40 +402,97 @@ const audio = document.getElementById("musicaBoda");
 const playIcon = document.querySelector("#playMusic .play-icon");
 const videoInicio = document.getElementById("videoInicio");
 const videoPlay = document.getElementById("videoPlay");
+const videoFinal = document.getElementById("videoFinal");
+const videoFinalPlay = document.getElementById("videoFinalPlay");
 let invitacionAbierta = false;
 
-/* VIDEO INICIO */
-function iniciarVideo() {
-    if (!videoInicio) return;
-    videoInicio.muted = true;
-    videoInicio.defaultMuted = true;
-    var p = videoInicio.play();
-    if (p && typeof p.then === "function") {
-        p.then(function () { videoPlay.classList.add("oculta"); })
-         .catch(function () { videoPlay.classList.remove("oculta"); });
+/* ===== AUTOPLAY EN BUCLE DE LOS VIDEOS (siempre en mute) ===== */
+function crearAutoplay(v, btn, permitido) {
+    v.muted = true; v.defaultMuted = true; v.volume = 0;
+    v.loop = true;
+    v.setAttribute("muted", ""); v.setAttribute("playsinline", "");
+
+    function intentar(forzar) {
+        if (!v.paused && !v.ended) return;
+        if (!forzar && !permitido()) return;
+        v.muted = true;
+        var p = v.play();
+        if (p && typeof p.then === "function") {
+            p.then(function () { btn.classList.add("oculta"); })
+             .catch(function () { btn.classList.remove("oculta"); });
+        }
     }
+
+    btn.addEventListener("click", function () { intentar(true); });
+    v.addEventListener("playing", function () { btn.classList.add("oculta"); });
+
+    /* Intenta reproducir en cada etapa de carga */
+    ["loadedmetadata", "loadeddata", "canplay", "canplaythrough"].forEach(function (ev) {
+        v.addEventListener(ev, function () { intentar(false); });
+    });
+
+    /* Si termina (algunos celulares ignoran loop), reinicia de inmediato */
+    v.addEventListener("ended", function () {
+        v.currentTime = 0;
+        intentar(true);
+    });
+
+    /* Si el navegador lo pausa solo, lo reanuda */
+    v.addEventListener("pause", function () {
+        if (!v.ended && permitido()) setTimeout(function () { intentar(false); }, 300);
+    });
+
+    /* Nunca permitir sonido */
+    v.addEventListener("volumechange", function () { if (!v.muted || v.volume > 0) { v.muted = true; v.volume = 0; } });
+
+    /* Vigilante: cada 2 s revisa que siga reproduciéndose */
+    setInterval(function () {
+        if (v.paused || v.ended) intentar(false);
+    }, 2000);
+
+    return intentar;
 }
-videoPlay.addEventListener("click", iniciarVideo);
-videoInicio.addEventListener("canplay", function () { if (invitacionAbierta && videoInicio.paused) iniciarVideo(); });
-videoInicio.addEventListener("playing", function () { videoPlay.classList.add("oculta"); });
+
+/* VIDEO 1: arranca apenas carga la página (detrás de la portada) */
+const intentarV1 = crearAutoplay(videoInicio, videoPlay, function () { return true; });
+intentarV1(false);
+
+/* VIDEO 2: arranca cuando está cerca de la pantalla y sigue en bucle */
+let v2Cerca = false;
+const intentarV2 = crearAutoplay(videoFinal, videoFinalPlay, function () { return v2Cerca; });
+
+if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            v2Cerca = entry.isIntersecting;
+            if (v2Cerca) { intentarV2(false); } else { videoFinal.pause(); }
+        });
+    }, { rootMargin: "500px 0px", threshold: 0 }).observe(videoFinal);
+} else {
+    v2Cerca = true;
+    intentarV2(false);
+}
+
+/* Reintentos: primer toque/scroll del usuario y al volver a la pestaña */
+["touchstart", "click", "scroll"].forEach(function (ev) {
+    window.addEventListener(ev, function () {
+        intentarV1(false);
+        intentarV2(false);
+    }, { once: true, passive: true });
+});
+document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) { intentarV1(false); intentarV2(false); }
+});
+window.addEventListener("load", function () { intentarV1(false); intentarV2(false); });
 
 /* PORTADA */
 preloader.addEventListener("click", function () {
     invitacionAbierta = true;
     preloader.classList.add("hide");
     window.scrollTo({ top: 0, behavior: "instant" });
-    if (videoInicio) {
-        if (videoInicio.readyState === 0) videoInicio.load();
-        videoInicio.currentTime = 0;
-        iniciarVideo();
-    }
-    setTimeout(function () { if (videoInicio && videoInicio.paused) iniciarVideo(); }, 900);
+    intentarV1(true);
     audio.play().then(function () { playIcon.classList.add("pause"); }).catch(function () {});
 }, { once: true });
-
-document.addEventListener("visibilitychange", function () {
-    if (!document.hidden && invitacionAbierta) iniciarVideo();
-});
 
 /* REPRODUCTOR */
 const progressContainer = document.getElementById("progressContainer");
@@ -575,42 +632,6 @@ window.addEventListener("load", function () {
         if (Math.abs(dx) > 40) mostrar(dx < 0 ? lbIdx + 1 : lbIdx - 1);
         lx0 = null;
     });
-})();
-
-/* VIDEO FINAL: automático y SIEMPRE en mute */
-(function () {
-    const vf = document.getElementById("videoFinal");
-    const vfPlay = document.getElementById("videoFinalPlay");
-    if (!vf) return;
-
-    function silenciar() { vf.muted = true; vf.defaultMuted = true; vf.volume = 0; }
-    silenciar();
-    vf.addEventListener("volumechange", function () { if (!vf.muted || vf.volume > 0) silenciar(); });
-
-    function reproducirFinal() {
-        silenciar();
-        const p = vf.play();
-        if (p && typeof p.then === "function") {
-            p.then(function () { vfPlay.classList.add("oculta"); })
-             .catch(function () { vfPlay.classList.remove("oculta"); });
-        }
-    }
-    vfPlay.addEventListener("click", reproducirFinal);
-    vf.addEventListener("playing", function () { vfPlay.classList.add("oculta"); });
-
-    let enPantalla = false;
-    vf.addEventListener("canplay", function () { if (enPantalla && vf.paused) reproducirFinal(); });
-
-    if ("IntersectionObserver" in window) {
-        new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                enPantalla = entry.isIntersecting;
-                if (enPantalla) { reproducirFinal(); } else { vf.pause(); }
-            });
-        }, { threshold: 0.25 }).observe(vf);
-    } else {
-        reproducirFinal();
-    }
 })();
 
 /* CONTADOR */
