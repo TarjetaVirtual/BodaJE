@@ -453,25 +453,11 @@ function crearAutoplay(v, btn, permitido) {
     return intentar;
 }
 
-/* VIDEO 1: arranca apenas carga la página (detrás de la portada) */
+/* VIDEO 1 y VIDEO 2: ambos en bucle continuo, siempre en mute */
 const intentarV1 = crearAutoplay(videoInicio, videoPlay, function () { return true; });
+const intentarV2 = crearAutoplay(videoFinal, videoFinalPlay, function () { return true; });
 intentarV1(false);
-
-/* VIDEO 2: arranca cuando está cerca de la pantalla y sigue en bucle */
-let v2Cerca = false;
-const intentarV2 = crearAutoplay(videoFinal, videoFinalPlay, function () { return v2Cerca; });
-
-if ("IntersectionObserver" in window) {
-    new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-            v2Cerca = entry.isIntersecting;
-            if (v2Cerca) { intentarV2(false); } else { videoFinal.pause(); }
-        });
-    }, { rootMargin: "500px 0px", threshold: 0 }).observe(videoFinal);
-} else {
-    v2Cerca = true;
-    intentarV2(false);
-}
+intentarV2(false);
 
 /* Reintentos: primer toque/scroll del usuario y al volver a la pestaña */
 ["touchstart", "click", "scroll"].forEach(function (ev) {
@@ -490,7 +476,12 @@ preloader.addEventListener("click", function () {
     invitacionAbierta = true;
     preloader.classList.add("hide");
     window.scrollTo({ top: 0, behavior: "instant" });
+
+    /* El toque del usuario desbloquea la reproducción: arrancan los dos videos */
     intentarV1(true);
+    intentarV2(true);
+    setTimeout(function () { intentarV1(true); intentarV2(true); }, 400);
+
     audio.play().then(function () { playIcon.classList.add("pause"); }).catch(function () {});
 }, { once: true });
 
