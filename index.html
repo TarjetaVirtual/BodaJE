@@ -373,7 +373,7 @@ img { display: block; height: auto; max-width: 100%; margin-left: auto; margin-r
 <!-- VIDEO FINAL (SIN SONIDO) -->
 <section class="foto-inicio video-inicio video-final">
     <div class="video-wrap">
-        <video id="videoFinal" autoplay poster="5.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate nofullscreen" preload="auto" class="foto-entrada-celular">
+        <video id="videoFinal" autoplay poster="5.jpg" muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate nofullscreen" preload="metadata" class="foto-entrada-celular">
             <source src="video2.mp4" type="video/mp4">
         </video>
         <button class="video-play oculta" id="videoFinalPlay" aria-label="Reproducir video"><span></span></button>
@@ -423,7 +423,20 @@ function crearAutoplay(v, btn, permitido) {
         }
     }
 
-    btn.addEventListener("click", function () { intentar(true); });
+    btn.addEventListener("click", function () {
+        if (v.readyState === 0 || v.error) { v.load(); }
+        intentar(true);
+    });
+
+    /* Si el video falla al cargar, reintenta una vez */
+    var reintentoError = false;
+    v.addEventListener("error", function () {
+        btn.classList.remove("oculta");
+        if (!reintentoError) {
+            reintentoError = true;
+            setTimeout(function () { v.load(); intentar(true); }, 1000);
+        }
+    });
     v.addEventListener("playing", function () { btn.classList.add("oculta"); });
 
     /* Intenta reproducir en cada etapa de carga */
@@ -479,8 +492,8 @@ preloader.addEventListener("click", function () {
 
     /* El toque del usuario desbloquea la reproducción: arrancan los dos videos */
     intentarV1(true);
-    intentarV2(true);
-    setTimeout(function () { intentarV1(true); intentarV2(true); }, 400);
+    setTimeout(function () { intentarV2(true); }, 600);
+    setTimeout(function () { intentarV1(true); intentarV2(true); }, 1500);
 
     audio.play().then(function () { playIcon.classList.add("pause"); }).catch(function () {});
 }, { once: true });
